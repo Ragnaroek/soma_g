@@ -19,6 +19,6 @@ fn main() {
     let rom_file = matches.value_of("ROMFILE").unwrap();
     let rom = fs::read(rom_file).unwrap();
 
-    let term = z80::start(&rom, 0x100);
+    let term = z80::start(rom, 0x100);
     println!("terminated: {:?}", term);
 }
