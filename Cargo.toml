@@ -7,3 +7,4 @@ authors = ["Michael Bohn <spaceodyssey@gmx.de>"]
 name = "somag"
 
 [dependencies]
+clap = "2.32.0"
