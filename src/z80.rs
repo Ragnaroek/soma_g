@@ -11,7 +11,7 @@ pub fn start(mem: Vec<u8>, start_addr: usize) -> Result<(), String> {
     //TODO model state as a struct with register
     //TODO add function over state to instr to code effect
     loop {
-        let op = state.mem[state.register.pc as usize];
+        let op = state.mem[state.reg.pc as usize];
         let instr_lookup = instr_set.get(op);
         if instr_lookup.is_none() {
             return Err(format!("not an instruction: 0x{:x}", op));
@@ -20,25 +20,27 @@ pub fn start(mem: Vec<u8>, start_addr: usize) -> Result<(), String> {
         (instr.effect)(&mut state);
         //TODO: modify PC, Registers, Memory accordingly
         println!("instr = {:?}", instr);
-        state.register.pc = state.register.pc + 1;
+        state.reg.pc = state.reg.pc + 1;
     }
 }
 
-struct State {
-    mem: Vec<u8>,
-    register: Register,
+#[derive(Debug, PartialEq)]
+pub struct State {
+    pub mem: Vec<u8>,
+    pub reg: Register,
 }
 
-struct Register {
-    pc: u16,
-    a: u8,
-    b: u8,
-    c: u8,
-    l: u8,
+#[derive(Debug, PartialEq)]
+pub struct Register {
+    pub pc: u16,
+    pub a: u8,
+    pub b: u8,
+    pub c: u8,
+    pub l: u8,
 }
 
-fn initial_state(mem: Vec<u8>, start_pc: u16) -> State {
-    return State{mem, register:
+pub fn initial_state(mem: Vec<u8>, start_pc: u16) -> State {
+    return State{mem, reg:
         Register{pc: start_pc,
                  a: 0,
                  b: 0,
@@ -86,6 +88,7 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0x0C, "INC A", inc_a);
     instr_set.add_instr(0x2C, "INC L", inc_l);
     instr_set.add_instr(0x02, "LD (BC),A", ld_bc_a);
+    //TODO Impl 0xCD instruction (interesting, this is CALL)
     return instr_set;
 }
 
@@ -95,21 +98,21 @@ pub fn u16_le(pc: u16, mem: &[u8]) -> u16 {
     return (a1 << 8) | a2;
 }
 
-fn nop(s: &mut State) {}
+pub fn nop(_s: &mut State) {}
 
-fn jp(s: &mut State) {
-    let address = u16_le(s.register.pc, &s.mem);
-    s.register.pc = address;
+pub fn jp(s: &mut State) {
+    let address = u16_le(s.reg.pc, &s.mem);
+    s.reg.pc = address;
 }
 
-fn inc_a(s: &mut State) {
-    s.register.a = s.register.a + 1;
+pub fn inc_a(s: &mut State) {
+    s.reg.a = s.reg.a + 1;
 }
 
-fn inc_l(s: &mut State) {
-    s.register.l = s.register.l + 1;
+pub fn inc_l(s: &mut State) {
+    s.reg.l = s.reg.l + 1;
 }
 
-fn ld_bc_a(s: &mut State) {
-    s.register.b = s.register.a;
+pub fn ld_bc_a(s: &mut State) {
+    s.reg.b = s.reg.a;
 }
