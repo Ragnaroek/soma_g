@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use std::fmt;
 
 
-pub fn start(mem: Vec<u8>, start_addr: usize) -> Result<(), String> {
+pub fn start(mut state: State) -> Result<(), String> {
 
-    let mut state = initial_state(mem, start_addr as u16);
     let instr_set = instruction_set();
 
     //TODO model state as a struct with register
@@ -27,25 +26,30 @@ pub fn start(mem: Vec<u8>, start_addr: usize) -> Result<(), String> {
 #[derive(Debug, PartialEq)]
 pub struct State {
     pub mem: Vec<u8>,
+    pub stack: Vec<u8>,
     pub reg: Register,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Register {
     pub pc: u16,
+    pub sp: u16,
+
     pub a: u8,
     pub b: u8,
     pub c: u8,
     pub l: u8,
 }
 
-pub fn initial_state(mem: Vec<u8>, start_pc: u16) -> State {
-    return State{mem, reg:
-        Register{pc: start_pc,
-                 a: 0,
-                 b: 0,
-                 c: 0,
-                 l: 0}};
+pub fn initial_state(mem: Vec<u8>, stack_size: usize, start_pc: u16, start_sp: u16) -> State {
+    return State{mem,
+                 stack: vec![0; stack_size],
+                 reg: Register{pc: start_pc,
+                     sp: start_sp,
+                     a: 0,
+                     b: 0,
+                     c: 0,
+                     l: 0}};
 }
 
 struct Instr {
@@ -88,6 +92,7 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0x0C, "INC A", inc_a);
     instr_set.add_instr(0x2C, "INC L", inc_l);
     instr_set.add_instr(0x02, "LD (BC),A", ld_bc_a);
+    instr_set.add_instr(0xCD, "CALL", call);
     //TODO Impl 0xCD instruction (interesting, this is CALL)
     return instr_set;
 }
@@ -96,6 +101,10 @@ pub fn u16_le(pc: u16, mem: &[u8]) -> u16 {
     let a1 = mem[pc as usize + 2] as u16;
     let a2 = mem[pc as usize + 1] as u16;
     return (a1 << 8) | a2;
+}
+
+pub fn u16_reg(reg1: u8, reg2: u8) -> u16 {
+    return ((reg1 as u16) << 8) | reg2 as u16;
 }
 
 pub fn nop(_s: &mut State) {}
@@ -114,5 +123,10 @@ pub fn inc_l(s: &mut State) {
 }
 
 pub fn ld_bc_a(s: &mut State) {
-    s.reg.b = s.reg.a;
+    let ptr = u16_reg(s.reg.b, s.reg.c) as usize;
+    s.reg.a = s.mem[ptr];
+}
+
+pub fn call(s: &mut State) {
+
 }

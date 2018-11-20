@@ -42,17 +42,24 @@ fn test_inc_l() {
 
 #[test]
 fn test_ld_bc_a() {
-    let mut s = state_no_mem();
-    s.reg.a = 0x66;
+    let mut mem = vec![0; 0x3000];
+    mem[0x205F] = 0x3F;
+    let mut s = state_mem(mem);
+    s.reg.b = 0x20;
+    s.reg.c = 0x5F;
     z80::ld_bc_a(&mut s);
 
-    assert_eq!(s.reg.b, 0x66);
-
-    s.reg.a = 0;
-    s.reg.b = 0;
-    assert_eq!(s, state_no_mem());
+    assert_eq!(s.reg.a, 0x3F);
 }
 
+#[test]
+fn test_call() {
+    let mut s = state_no_mem();
+    s.reg.pc = 0xFFAA;
+
+    z80::call(&mut s);
+
+}
 
 #[test]
 fn test_u16_le() {
@@ -61,14 +68,19 @@ fn test_u16_le() {
     assert_eq!(result, 0x0150);
 }
 
+#[test]
+fn test_u16_reg() {
+    let result = z80::u16_reg(0x20, 0x5F);
+    assert_eq!(result, 0x205F);
+}
 //helper methods
 
 fn state_no_mem() -> z80::State {
-    z80::initial_state(Vec::new(), 0x0)
+    z80::initial_state(Vec::new(), 127, 0x0, 0xFFFE)
 }
 
 fn state_mem(mem: Vec<u8>) -> z80::State {
-    z80::initial_state(mem, 0x0)
+    z80::initial_state(mem, 127, 0x0, 0xFFFE)
 }
 
 fn exec(effect: fn(&mut z80::State)) -> z80::State {
@@ -78,7 +90,7 @@ fn exec(effect: fn(&mut z80::State)) -> z80::State {
 }
 
 fn exec_mem(mem: Vec<u8>, effect: fn(&mut z80::State)) -> z80::State {
-    let mut s = z80::initial_state(mem, 0x0);
+    let mut s = z80::initial_state(mem, 127, 0x0, 0xFFFE);
     (effect)(&mut s);
     return s;
 }

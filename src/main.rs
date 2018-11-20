@@ -5,6 +5,7 @@ use clap::{Arg, App};
 use std::fs;
 
 use somag::z80;
+use somag::gameboy;
 
 fn main() {
     let matches = App::new("soma_g")
@@ -19,6 +20,7 @@ fn main() {
     let rom_file = matches.value_of("ROMFILE").unwrap();
     let rom = fs::read(rom_file).unwrap();
 
-    let term = z80::start(rom, 0x100);
+    let state = gameboy::gameboy_init(rom);
+    let term = z80::start(state);
     println!("terminated: {:?}", term);
 }

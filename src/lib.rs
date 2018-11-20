@@ -3,3 +3,4 @@
 
 pub mod tbpp;
 pub mod z80;
+pub mod gameboy;
