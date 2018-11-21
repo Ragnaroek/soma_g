@@ -98,6 +98,37 @@ fn test_sub_byte_zero() {
 
     assert_eq!(s.reg.a, 0x0);
     assert_eq!(s.reg.zero_flag(), true);
+    assert_eq!(s.reg.carry_flag(), false);
+    assert_eq!(s.reg.half_carry_flag(), false);
+    assert_eq!(s.reg.n_flag(), true);
+}
+
+#[test]
+fn test_sub_byte_carry() {
+    let mem = [0xD6, 0x40].to_vec();
+    let mut s = state_mem(mem);
+    s.reg.a = 0x3E;
+    z80::sub_byte(&mut s);
+
+    assert_eq!(s.reg.a, 0xFE);
+    assert_eq!(s.reg.zero_flag(), false);
+    assert_eq!(s.reg.carry_flag(), true);
+    assert_eq!(s.reg.half_carry_flag(), false);
+    assert_eq!(s.reg.n_flag(), true);
+}
+
+#[test]
+fn test_sub_byte_half_carry() {
+    let mem = [0xD6, 0x0F].to_vec();
+    let mut s = state_mem(mem);
+    s.reg.a = 0x3E;
+    z80::sub_byte(&mut s);
+
+    assert_eq!(s.reg.a, 0x2F);
+    assert_eq!(s.reg.zero_flag(), false);
+    assert_eq!(s.reg.carry_flag(), false);
+    assert_eq!(s.reg.half_carry_flag(), true);
+    assert_eq!(s.reg.n_flag(), true);
 }
 
 

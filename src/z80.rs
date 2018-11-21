@@ -42,7 +42,7 @@ pub struct Register {
 const Z : u8 = 1 << 7;
 const N : u8 = 1 << 6;
 const H : u8 = 1 << 5;
-const CY : u8 = 1 << 4;
+const C : u8 = 1 << 4;
 
 impl Register {
     pub fn set_zero_flag(&mut self, b: bool) {
@@ -52,9 +52,41 @@ impl Register {
             self.f = self.f & !Z;
         }
     }
-
     pub fn zero_flag(&self) -> bool {
         (self.f & Z) != 0
+    }
+
+    pub fn set_carry_flag(&mut self, b: bool) {
+        if b {
+            self.f = self.f | C;
+        } else {
+            self.f = self.f & !C;
+        }
+    }
+    pub fn carry_flag(&self) -> bool {
+        (self.f & C) != 0
+    }
+
+    pub fn set_half_carry_flag(&mut self, b: bool) {
+        if b {
+            self.f = self.f | H;
+        } else {
+            self.f = self.f & !H;
+        }
+    }
+    pub fn half_carry_flag(&self) -> bool {
+        (self.f & H) != 0
+    }
+
+    pub fn set_n_flag(&mut self, b: bool) {
+        if b {
+            self.f = self.f | N;
+        } else {
+            self.f = self.f & !N;
+        }
+    }
+    pub fn n_flag(&self) -> bool {
+        (self.f & N) != 0
     }
 }
 
@@ -165,7 +197,14 @@ pub fn or_d(s: &mut State) {
 }
 
 pub fn sub_byte(s: &mut State) {
-    s.reg.a = s.reg.a - read_u8(s.reg.pc, &s.mem);
+    // a - val
+    let sub_val = read_u8(s.reg.pc, &s.mem);
+    let half_carry = (s.reg.a & 0xF) < (sub_val & 0xF);
+    let (a_val, carry) = s.reg.a.overflowing_sub(sub_val);
+    s.reg.a = a_val;
     let z = s.reg.a == 0;
     s.reg.set_zero_flag(z);
+    s.reg.set_carry_flag(carry);
+    s.reg.set_half_carry_flag(half_carry);
+    s.reg.set_n_flag(true);
 }
