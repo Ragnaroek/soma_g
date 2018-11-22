@@ -53,6 +53,15 @@ fn test_ld_bc_a() {
 }
 
 #[test]
+fn test_ld_de() {
+    let mem = [0x11, 0x3A, 0x5B].to_vec();
+    let s = exec_mem(mem, z80::ld_de);
+
+    assert_eq!(s.reg.d, 0x3A);
+    assert_eq!(s.reg.e, 0x5B);
+}
+
+#[test]
 fn test_call() {
     let mut mem = vec![0; 0x3000];
     mem[0x2000] = 0xCD;
@@ -129,6 +138,39 @@ fn test_sub_byte_half_carry() {
     assert_eq!(s.reg.carry_flag(), false);
     assert_eq!(s.reg.half_carry_flag(), true);
     assert_eq!(s.reg.n_flag(), true);
+}
+
+#[test]
+fn test_djnz_non_zero_result() {
+    let mem = [0x10, 0xFF].to_vec();
+    let mut s = state_mem(mem);
+    s.reg.b = 0xFF;
+    z80::djnz(&mut s);
+
+    assert_eq!(s.reg.pc, 0xFF);
+    assert_eq!(s.reg.b, 0xFE);
+}
+
+#[test]
+fn test_djnz_non_zero_result_overflow() {
+    let mem = [0x10, 0xFF].to_vec();
+    let mut s = state_mem(mem);
+    s.reg.b = 0x0;
+    z80::djnz(&mut s);
+
+    assert_eq!(s.reg.pc, 0xFF);
+    assert_eq!(s.reg.b, 0xFF);
+}
+
+#[test]
+fn test_djnz_zero_result() {
+    let mem = [0x10, 0xFF].to_vec();
+    let mut s = state_mem(mem);
+    s.reg.b = 0x01;
+    z80::djnz(&mut s);
+
+    assert_eq!(s.reg.pc, 0x00);
+    assert_eq!(s.reg.b, 0x00);
 }
 
 //register helpers

@@ -10,7 +10,7 @@ pub fn start(mut state: State) -> Result<(), String> {
         let op = state.mem[state.reg.pc as usize];
         let instr_lookup = instr_set.get(op);
         if instr_lookup.is_none() {
-            return Err(format!("not an instruction: 0x{:x}", op));
+            return Err(format!("unknwon instruction: 0x{:x}", op));
         }
         let instr = instr_lookup.unwrap();
         (instr.effect)(&mut state);
@@ -35,6 +35,7 @@ pub struct Register {
     pub b: u8,
     pub c: u8,
     pub d: u8,
+    pub e: u8,
     pub l: u8,
     pub f: u8,
 }
@@ -99,6 +100,7 @@ pub fn initial_state(mem: Vec<u8>, stack_size: usize, start_pc: u16) -> State {
                      b: 0,
                      c: 0,
                      d: 0,
+                     e: 0,
                      l: 0,
                      f: 0}};
 }
@@ -146,6 +148,9 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0xCD, "CALL", call);
     instr_set.add_instr(0xB2, "OR D", or_d);
     instr_set.add_instr(0xD6, "SUB byte", sub_byte);
+    instr_set.add_instr(0x10, "DJNZ", djnz);
+    instr_set.add_instr(0x11, "LD DE,*", ld_de);
+    //TODO DJNZ instruction
     return instr_set;
 }
 
@@ -183,6 +188,13 @@ pub fn ld_bc_a(s: &mut State) {
     s.reg.a = s.mem[ptr];
 }
 
+pub fn ld_de(s: &mut State) {
+    let d = read_u8(s.reg.pc, &s.mem);
+    let e = read_u8(s.reg.pc+1, &s.mem);
+    s.reg.d = d;
+    s.reg.e = e;
+}
+
 pub fn call(s: &mut State) {
     let pc_p = s.reg.pc + 3;
     s.reg.sp = s.reg.sp - 1;
@@ -206,4 +218,13 @@ pub fn sub_byte(s: &mut State) {
     s.reg.set_carry_flag(carry);
     s.reg.set_half_carry_flag(half_carry);
     s.reg.set_n_flag(true);
+}
+
+pub fn djnz(s: &mut State) {
+    let (b_val, _) = s.reg.b.overflowing_sub(1);
+    s.reg.b = b_val;
+    if s.reg.b != 0 {
+        let ix = read_u8(s.reg.pc, &s.mem);
+        s.reg.pc = s.reg.pc + ix as u16;
+    }
 }
