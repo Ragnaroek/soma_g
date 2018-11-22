@@ -36,6 +36,7 @@ pub struct Register {
     pub c: u8,
     pub d: u8,
     pub e: u8,
+    pub h: u8,
     pub l: u8,
     pub f: u8,
 }
@@ -101,6 +102,7 @@ pub fn initial_state(mem: Vec<u8>, stack_size: usize, start_pc: u16) -> State {
                      c: 0,
                      d: 0,
                      e: 0,
+                     h: 0,
                      l: 0,
                      f: 0}};
 }
@@ -150,7 +152,7 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0xD6, "SUB byte", sub_byte);
     instr_set.add_instr(0x10, "DJNZ", djnz);
     instr_set.add_instr(0x11, "LD DE,*", ld_de);
-    //TODO DJNZ instruction
+    instr_set.add_instr(0x86, "ADD A,(HL)", add_a_hl);
     return instr_set;
 }
 
@@ -162,6 +164,11 @@ pub fn read_u16_le(pc: u16, mem: &[u8]) -> u16 {
 
 pub fn read_u8(pc: u16, mem: &[u8]) -> u8 {
     return mem[pc as usize + 1];
+}
+
+pub fn read_reg(reg1: u8, reg2: u8, mem: &[u8]) -> u8 {
+    let ptr = u16_reg(reg1, reg2) as usize;
+    mem[ptr]
 }
 
 pub fn u16_reg(reg1: u8, reg2: u8) -> u16 {
@@ -184,8 +191,7 @@ pub fn inc_l(s: &mut State) {
 }
 
 pub fn ld_bc_a(s: &mut State) {
-    let ptr = u16_reg(s.reg.b, s.reg.c) as usize;
-    s.reg.a = s.mem[ptr];
+    s.reg.a = read_reg(s.reg.b, s.reg.c, &s.mem);
 }
 
 pub fn ld_de(s: &mut State) {
@@ -227,4 +233,10 @@ pub fn djnz(s: &mut State) {
         let ix = read_u8(s.reg.pc, &s.mem);
         s.reg.pc = s.reg.pc + ix as u16;
     }
+}
+
+pub fn add_a_hl(s: &mut State) {
+    let add = read_reg(s.reg.h, s.reg.l, &s.mem);
+    let (a_val, _) = s.reg.a.overflowing_add(add);
+    s.reg.a = a_val;
 }

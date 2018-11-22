@@ -173,6 +173,32 @@ fn test_djnz_zero_result() {
     assert_eq!(s.reg.b, 0x00);
 }
 
+#[test]
+fn test_add_a_hl() {
+    let mut mem = vec![0; 0x3000];
+    mem[0x205F] = 0x3F;
+    let mut s = state_mem(mem);
+    s.reg.a = 0x05;
+    s.reg.h = 0x20;
+    s.reg.l = 0x5F;
+    z80::add_a_hl(&mut s);
+
+    assert_eq!(s.reg.a, 0x3F + 0x05);
+}
+
+#[test]
+fn test_add_a_hl_overflow() {
+    let mut mem = vec![0; 0x3000];
+    mem[0x205F] = 0x02;
+    let mut s = state_mem(mem);
+    s.reg.a = 0xFF;
+    s.reg.h = 0x20;
+    s.reg.l = 0x5F;
+    z80::add_a_hl(&mut s);
+
+    assert_eq!(s.reg.a, 0x01);
+}
+
 //register helpers
 
 #[test]
