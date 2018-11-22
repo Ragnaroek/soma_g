@@ -197,7 +197,6 @@ pub fn or_d(s: &mut State) {
 }
 
 pub fn sub_byte(s: &mut State) {
-    // a - val
     let sub_val = read_u8(s.reg.pc, &s.mem);
     let half_carry = (s.reg.a & 0xF) < (sub_val & 0xF);
     let (a_val, carry) = s.reg.a.overflowing_sub(sub_val);

@@ -131,14 +131,6 @@ fn test_sub_byte_half_carry() {
     assert_eq!(s.reg.n_flag(), true);
 }
 
-
-#[test]
-fn test_read_u16_le() {
-    let mem = [0x3C, 0x50, 0x01];
-    let result = z80::read_u16_le(0, &mem);
-    assert_eq!(result, 0x0150);
-}
-
 //register helpers
 
 #[test]
@@ -151,7 +143,44 @@ fn test_zero_flag() {
     assert_eq!(false, s.reg.zero_flag());
 }
 
+#[test]
+fn test_n_flag() {
+    let mut s = state_no_mem();
+    s.reg.set_n_flag(true);
+    assert_eq!(true, s.reg.n_flag());
+
+    s.reg.set_n_flag(false);
+    assert_eq!(false, s.reg.n_flag());
+}
+
+#[test]
+fn test_half_carry_flag() {
+    let mut s = state_no_mem();
+    s.reg.set_half_carry_flag(true);
+    assert_eq!(true, s.reg.half_carry_flag());
+
+    s.reg.set_half_carry_flag(false);
+    assert_eq!(false, s.reg.half_carry_flag());
+}
+
+#[test]
+fn test_carry_flag() {
+    let mut s = state_no_mem();
+    s.reg.set_carry_flag(true);
+    assert_eq!(true, s.reg.carry_flag());
+
+    s.reg.set_carry_flag(false);
+    assert_eq!(false, s.reg.carry_flag());
+}
+
 //read mem methods
+
+#[test]
+fn test_read_u16_le() {
+    let mem = [0x3C, 0x50, 0x01];
+    let result = z80::read_u16_le(0, &mem);
+    assert_eq!(result, 0x0150);
+}
 
 #[test]
 fn test_read_u8() {
