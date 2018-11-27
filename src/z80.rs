@@ -234,6 +234,7 @@ pub fn sub_byte(s: &mut State) {
     s.reg.a = a_val;
     let z = s.reg.a == 0;
     s.reg.pc = s.reg.pc + 1;
+
     s.reg.set_zero_flag(z);
     s.reg.set_carry_flag(carry);
     s.reg.set_half_carry_flag(half_carry);
@@ -251,7 +252,12 @@ pub fn djnz(s: &mut State) {
 
 pub fn add_a_hl(s: &mut State) {
     let add = read_reg(s.reg.h, s.reg.l, &s.mem);
-    let (a_val, _) = s.reg.a.overflowing_add(add);
+    let half_carry = ((s.reg.a&0xf) + (add&0xf))&0x10 == 0x10;
+    let (a_val, carry) = s.reg.a.overflowing_add(add);
     s.reg.a = a_val;
-    //TODO Set flags!!
+
+    s.reg.set_zero_flag(a_val == 0);
+    s.reg.set_carry_flag(carry);
+    s.reg.set_half_carry_flag(half_carry);
+    s.reg.set_n_flag(false);
 }

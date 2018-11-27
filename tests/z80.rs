@@ -122,10 +122,7 @@ fn test_sub_byte_zero() {
 
     assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0x0);
-    assert_eq!(s.reg.zero_flag(), true);
-    assert_eq!(s.reg.carry_flag(), false);
-    assert_eq!(s.reg.half_carry_flag(), false);
-    assert_eq!(s.reg.n_flag(), true);
+    assert_zchn(&s, true, false, false, true);
 }
 
 #[test]
@@ -137,10 +134,7 @@ fn test_sub_byte_carry() {
 
     assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0xFE);
-    assert_eq!(s.reg.zero_flag(), false);
-    assert_eq!(s.reg.carry_flag(), true);
-    assert_eq!(s.reg.half_carry_flag(), false);
-    assert_eq!(s.reg.n_flag(), true);
+    assert_zchn(&s, false, true, false, true);
 }
 
 #[test]
@@ -152,10 +146,7 @@ fn test_sub_byte_half_carry() {
 
     assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0x2F);
-    assert_eq!(s.reg.zero_flag(), false);
-    assert_eq!(s.reg.carry_flag(), false);
-    assert_eq!(s.reg.half_carry_flag(), true);
-    assert_eq!(s.reg.n_flag(), true);
+    assert_zchn(&s, false, false, true, true);
 }
 
 #[test]
@@ -192,7 +183,7 @@ fn test_djnz_zero_result() {
 }
 
 #[test]
-fn test_add_a_hl() {
+fn test_add_a_hl_non_zero() {
     let mut mem = vec![0; 0x3000];
     mem[0x205F] = 0x3F;
     let mut s = state_mem(mem);
@@ -202,10 +193,25 @@ fn test_add_a_hl() {
     z80::add_a_hl(&mut s);
 
     assert_eq!(s.reg.a, 0x3F + 0x05);
+    assert_zchn(&s, false, false, true, false);
 }
 
 #[test]
-fn test_add_a_hl_overflow() {
+fn test_add_a_hl_zero() {
+    let mut mem = vec![0; 0x3000];
+    mem[0x205F] = 0x3F;
+    let mut s = state_mem(mem);
+    s.reg.a = 0xC1;
+    s.reg.h = 0x20;
+    s.reg.l = 0x5F;
+    z80::add_a_hl(&mut s);
+
+    assert_eq!(s.reg.a, 0x0);
+    assert_zchn(&s, true, true, true, false);
+}
+
+#[test]
+fn test_add_a_hl_carry() {
     let mut mem = vec![0; 0x3000];
     mem[0x205F] = 0x02;
     let mut s = state_mem(mem);
@@ -215,10 +221,35 @@ fn test_add_a_hl_overflow() {
     z80::add_a_hl(&mut s);
 
     assert_eq!(s.reg.a, 0x01);
-    //TODO Check flags
+    assert_zchn(&s, false, true, true, false);
 }
 
+#[test]
+fn test_add_a_hl_half_carry() {
+    let mut mem = vec![0; 0x3000];
+    mem[0x205F] = 0xC6;
+    let mut s = state_mem(mem);
+    s.reg.a = 0x3A;
+    s.reg.h = 0x20;
+    s.reg.l = 0x5F;
+    z80::add_a_hl(&mut s);
+
+    assert_eq!(s.reg.a, 0x0);
+    assert_zchn(&s, true, true, true, false);
+}
+
+
+//template reg tests
+//xxx_non_zero, xxx_zero, xxx_carry, xxx_half_carry
+
 //register helpers
+
+fn assert_zchn(s: &z80::State, z: bool, c: bool, h: bool, n: bool) {
+    assert_eq!(z, s.reg.zero_flag(), "zero flag");
+    assert_eq!(c, s.reg.carry_flag(), "carry flag");
+    assert_eq!(h, s.reg.half_carry_flag(), "half carry flag");
+    assert_eq!(n, s.reg.n_flag(), "n flag");
+}
 
 #[test]
 fn test_zero_flag() {
