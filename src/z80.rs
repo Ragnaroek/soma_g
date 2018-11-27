@@ -120,6 +120,7 @@ impl fmt::Debug for Instr {
 }
 
 struct InstrSet {
+    //TODO: Use an array here, for O(1) instruction lookup!!!
     set: HashMap<u8, Instr>,
 }
 
@@ -153,6 +154,7 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0x10, "DJNZ", djnz);
     instr_set.add_instr(0x11, "LD DE,*", ld_de);
     instr_set.add_instr(0x86, "ADD A,(HL)", add_a_hl);
+    instr_set.add_instr(0xFF, "RST 38H", rst_38);
     return instr_set;
 }
 
@@ -192,22 +194,33 @@ pub fn inc_l(s: &mut State) {
 
 pub fn ld_bc_a(s: &mut State) {
     s.reg.a = read_reg(s.reg.b, s.reg.c, &s.mem);
+    s.reg.pc = s.reg.pc + 2;
 }
 
 pub fn ld_de(s: &mut State) {
     let d = read_u8(s.reg.pc, &s.mem);
     let e = read_u8(s.reg.pc+1, &s.mem);
+    s.reg.pc = s.reg.pc + 2;
     s.reg.d = d;
     s.reg.e = e;
 }
 
 pub fn call(s: &mut State) {
+    let to = read_u16_le(s.reg.pc, &s.mem);
+    call_to(s, to);
+}
+
+fn call_to(s: &mut State, to: u16) {
     let pc_p = s.reg.pc + 3;
     s.reg.sp = s.reg.sp - 1;
     s.stack[s.reg.sp as usize] = ((pc_p & 0xFF00) >> 8) as u8;
     s.reg.sp = s.reg.sp - 1;
     s.stack[s.reg.sp as usize] = (pc_p & 0x00FF) as u8;
-    s.reg.pc = read_u16_le(s.reg.pc, &s.mem);
+    s.reg.pc = to;
+}
+
+pub fn rst_38(s: &mut State) {
+    call_to(s, 0x38);
 }
 
 pub fn or_d(s: &mut State) {
@@ -220,6 +233,7 @@ pub fn sub_byte(s: &mut State) {
     let (a_val, carry) = s.reg.a.overflowing_sub(sub_val);
     s.reg.a = a_val;
     let z = s.reg.a == 0;
+    s.reg.pc = s.reg.pc + 1;
     s.reg.set_zero_flag(z);
     s.reg.set_carry_flag(carry);
     s.reg.set_half_carry_flag(half_carry);
@@ -239,4 +253,5 @@ pub fn add_a_hl(s: &mut State) {
     let add = read_reg(s.reg.h, s.reg.l, &s.mem);
     let (a_val, _) = s.reg.a.overflowing_add(add);
     s.reg.a = a_val;
+    //TODO Set flags!!
 }

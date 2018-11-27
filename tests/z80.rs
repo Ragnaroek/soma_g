@@ -50,6 +50,7 @@ fn test_ld_bc_a() {
     z80::ld_bc_a(&mut s);
 
     assert_eq!(s.reg.a, 0x3F);
+    assert_eq!(s.reg.pc, 2);
 }
 
 #[test]
@@ -57,6 +58,7 @@ fn test_ld_de() {
     let mem = [0x11, 0x3A, 0x5B].to_vec();
     let s = exec_mem(mem, z80::ld_de);
 
+    assert_eq!(s.reg.pc, 0x02);
     assert_eq!(s.reg.d, 0x3A);
     assert_eq!(s.reg.e, 0x5B);
 }
@@ -78,6 +80,18 @@ fn test_call() {
 }
 
 #[test]
+fn test_rst_38() {
+    let mut s = state_no_mem();
+    s.reg.pc = 0x2000;
+
+    z80::rst_38(&mut s);
+    assert_eq!(s.reg.sp, 125);
+    assert_eq!(s.reg.pc, 0x38);
+    assert_eq!(s.stack[126], 0x20);
+    assert_eq!(s.stack[125], 0x03);
+}
+
+#[test]
 fn test_or_d() {
     let mut s = state_no_mem();
     s.reg.a = 0b10101010;
@@ -94,6 +108,7 @@ fn test_sub_byte_non_zero() {
     s.reg.a = 0x3E;
     z80::sub_byte(&mut s);
 
+    assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0x2F);
     assert_eq!(s.reg.zero_flag(), false);
 }
@@ -105,6 +120,7 @@ fn test_sub_byte_zero() {
     s.reg.a = 0x3E;
     z80::sub_byte(&mut s);
 
+    assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0x0);
     assert_eq!(s.reg.zero_flag(), true);
     assert_eq!(s.reg.carry_flag(), false);
@@ -119,6 +135,7 @@ fn test_sub_byte_carry() {
     s.reg.a = 0x3E;
     z80::sub_byte(&mut s);
 
+    assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0xFE);
     assert_eq!(s.reg.zero_flag(), false);
     assert_eq!(s.reg.carry_flag(), true);
@@ -133,6 +150,7 @@ fn test_sub_byte_half_carry() {
     s.reg.a = 0x3E;
     z80::sub_byte(&mut s);
 
+    assert_eq!(s.reg.pc, 0x01);
     assert_eq!(s.reg.a, 0x2F);
     assert_eq!(s.reg.zero_flag(), false);
     assert_eq!(s.reg.carry_flag(), false);
@@ -197,6 +215,7 @@ fn test_add_a_hl_overflow() {
     z80::add_a_hl(&mut s);
 
     assert_eq!(s.reg.a, 0x01);
+    //TODO Check flags
 }
 
 //register helpers
