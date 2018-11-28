@@ -238,6 +238,31 @@ fn test_add_a_hl_half_carry() {
     assert_zchn(&s, true, true, true, false);
 }
 
+#[test]
+fn test_add_hl_hl_non_zero_and_carry() {
+    let mut s = state_no_mem();
+    s.reg.h = 0x8A;
+    s.reg.l = 0x23;
+    z80::add_hl_hl(&mut s);
+
+    assert_eq!(s.reg.h, 0x14);
+    assert_eq!(s.reg.l, 0x46);
+
+    assert_zchn(&s, false, true, true, false);
+}
+
+#[test]
+fn test_add_hl_hl_zero() {
+    let mut s = state_no_mem();
+    s.reg.h = 0x0;
+    s.reg.l = 0x0;
+    z80::add_hl_hl(&mut s);
+
+    assert_eq!(s.reg.h, 0x0);
+    assert_eq!(s.reg.l, 0x0);
+
+    assert_zchn(&s, true, false, false, false);
+}
 
 //template reg tests
 //xxx_non_zero, xxx_zero, xxx_carry, xxx_half_carry

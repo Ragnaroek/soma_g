@@ -154,6 +154,7 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0x10, "DJNZ", djnz);
     instr_set.add_instr(0x11, "LD DE,*", ld_de);
     instr_set.add_instr(0x86, "ADD A,(HL)", add_a_hl);
+    instr_set.add_instr(0x29, "ADD HL,HL", add_hl_hl);
     instr_set.add_instr(0xFF, "RST 38H", rst_38);
     return instr_set;
 }
@@ -252,11 +253,24 @@ pub fn djnz(s: &mut State) {
 
 pub fn add_a_hl(s: &mut State) {
     let add = read_reg(s.reg.h, s.reg.l, &s.mem);
-    let half_carry = ((s.reg.a&0xf) + (add&0xf))&0x10 == 0x10;
+    let half_carry = ((s.reg.a&0xF) + (add&0xF))&0x10 == 0x10;
     let (a_val, carry) = s.reg.a.overflowing_add(add);
     s.reg.a = a_val;
 
     s.reg.set_zero_flag(a_val == 0);
+    s.reg.set_carry_flag(carry);
+    s.reg.set_half_carry_flag(half_carry);
+    s.reg.set_n_flag(false);
+}
+
+pub fn add_hl_hl(s: &mut State) {
+    let hl = u16_reg(s.reg.h, s.reg.l);
+    let (r, carry) = hl.overflowing_add(hl);
+    let half_carry = r & 0x400 == 0x400;
+    s.reg.h = ((r & 0xFF00) >> 8) as u8;
+    s.reg.l = (r & 0xFF) as u8;
+
+    s.reg.set_zero_flag(r == 0);
     s.reg.set_carry_flag(carry);
     s.reg.set_half_carry_flag(half_carry);
     s.reg.set_n_flag(false);
