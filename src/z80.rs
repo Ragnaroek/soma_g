@@ -41,10 +41,11 @@ pub struct Register {
     pub f: u8,
 }
 
-const Z : u8 = 1 << 7;
-const N : u8 = 1 << 6;
+const C : u8 = 1 << 1;
+const N : u8 = 1 << 2;
+const P : u8 = 1 << 3;
 const H : u8 = 1 << 5;
-const C : u8 = 1 << 4;
+const Z : u8 = 1 << 7;
 
 impl Register {
     pub fn set_zero_flag(&mut self, b: bool) {
@@ -156,6 +157,7 @@ fn instruction_set() -> InstrSet {
     instr_set.add_instr(0x86, "ADD A,(HL)", add_a_hl);
     instr_set.add_instr(0x29, "ADD HL,HL", add_hl_hl);
     instr_set.add_instr(0xFF, "RST 38H", rst_38);
+    instr_set.add_instr(0xF0, "RET P", ret_p);
     return instr_set;
 }
 
@@ -274,4 +276,8 @@ pub fn add_hl_hl(s: &mut State) {
     s.reg.set_carry_flag(carry);
     s.reg.set_half_carry_flag(half_carry);
     s.reg.set_n_flag(false);
+}
+
+pub fn ret_p(s: &mut State) {
+
 }
