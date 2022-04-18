@@ -1,17 +1,17 @@
 extern crate clap;
 extern crate somag;
 
-use clap::{Arg, App};
+use clap::{Arg, Command};
 use std::fs;
 
 use somag::z80;
 use somag::gameboy;
 
 fn main() {
-    let matches = App::new("soma_g")
+    let matches = Command::new("soma_g")
                     .version("0.0.1")
                     .about("gameboy emulator")
-                    .arg(Arg::with_name("ROMFILE")
+                    .arg(Arg::new("ROMFILE")
                                .help("ROM file input")
                                .required(true)
                                .index(1))
