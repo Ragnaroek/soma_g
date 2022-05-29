@@ -1,10 +1,11 @@
 [package]
 name = "somag"
 version = "0.0.1"
+edition = "2021"
 authors = ["Michael Bohn <spaceodyssey@gmx.de>"]
 
 [lib]
 name = "somag"
 
 [dependencies]
-clap = "3.1.9"
+clap = "3.1.18"
